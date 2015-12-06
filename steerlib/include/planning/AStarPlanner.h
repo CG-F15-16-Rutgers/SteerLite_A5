@@ -7,33 +7,47 @@
 #ifndef __STEERLIB_A_STAR_PLANNER_H__
 #define __STEERLIB_A_STAR_PLANNER_H__
 
-
+#include <algorithm>
+#include <unordered_set>
 #include <vector>
 #include <stack>
 #include <set>
 #include <map>
+#include <limits>
 #include "SteerLib.h"
 
 namespace SteerLib
 {
 
 	/*
-		@function The AStarPlannerNode class gives a suggested container to build your search tree nodes.
-		@attributes 
-		f : the f value of the node
-		g : the cost from the start, for the node
-		point : the point in (x,0,z) space that corresponds to the current node
-		parent : the pointer to the parent AStarPlannerNode, so that retracing the path is possible.
-		@operators 
-		The greater than, less than and equals operator have been overloaded. This means that objects of this class can be used with these operators. Change the functionality of the operators depending upon your implementation
+	   @function The AStarPlannerNode class gives a suggested container to build your search tree nodes.
+	   @attributes 
+f : the f value of the node
+g : the cost from the start, for the node
+point : the point in (x,0,z) space that corresponds to the current node
+parent : the pointer to the parent AStarPlannerNode, so that retracing the path is possible.
+@operators 
+The greater than, less than and equals operator have been overloaded. This means that objects of this class can be used with these operators. Change the functionality of the operators depending upon your implementation
 
-	*/
+*/
 	class STEERLIB_API AStarPlannerNode{
 		public:
 			double f;
 			double g;
-			Util::Point point;
+			Util::Point point; // point cooridnate in global
+			Util::Point cell;// cell index in x and z
+			int index;
 			AStarPlannerNode* parent;
+			AStarPlannerNode() {
+				f = std::numeric_limits<double>::max() ;
+				g = std::numeric_limits<double>::max() ;
+				parent = NULL;
+				index = -1;
+				point.x = -1;
+				point.z = -1;
+				cell.x = -1;
+				cell.z = -1;
+			}
 			AStarPlannerNode(Util::Point _point, double _g, double _f, AStarPlannerNode* _parent)
 			{
 				f = _f;
@@ -41,22 +55,34 @@ namespace SteerLib
 				g = _g;
 				parent = _parent;
 			}
-			bool operator<(AStarPlannerNode other) const
-		    {
-		        return this->f < other.f;
-		    }
-		    bool operator>(AStarPlannerNode other) const
-		    {
-		        return this->f > other.f;
-		    }
-		    bool operator==(AStarPlannerNode other) const
-		    {
-		        return ((this->point.x == other.point.x) && (this->point.z == other.point.z));
-		    }
+			bool operator<(AStarPlannerNode& other) const
+			{
+				return this->f < other.f;
+			}
+			bool operator>(AStarPlannerNode& other) const
+			{
+				return this->f > other.f;
+			}
+			bool operator==(AStarPlannerNode& other) const
+			{
+				return ((this->point.x == other.point.x) && (this->point.z == other.point.z));
+			}
 
 	};
 
-	
+	class STEERLIB_API NodeCompare{
+		public:
+		bool operator()(const AStarPlannerNode* n1, const AStarPlannerNode* n2){
+			if(n2->f > n1->f){
+				return true;
+			}
+			if(n1->f == n2->f && n2->g < n1->g){    // smaller f first, bigger g first
+				return true;
+			}
+			return false;
+		} 
+	};
+
 
 	class STEERLIB_API AStarPlanner{
 		public:
@@ -70,34 +96,43 @@ namespace SteerLib
 			// When navigating the space or the Grid, do not mix the above up
 
 			/*
-				@function canBeTraversed checkes for a OBSTACLE_CLEARANCE area around the node index id for the presence of obstacles.
-				The function finds the grid coordinates for the cell index  as (X_GRID, Z_GRID)
-				and checks cells in bounding box area
-				[[X_GRID-OBSTACLE_CLEARANCE, X_GRID+OBSTACLE_CLEARANCE],
-				[Z_GRID-OBSTACLE_CLEARANCE, Z_GRID+OBSTACLE_CLEARANCE]]
-				This function also contains the griddatabase call that gets traversal costs.
-			*/
+			   @function canBeTraversed checkes for a OBSTACLE_CLEARANCE area around the node index id for the presence of obstacles.
+			   The function finds the grid coordinates for the cell index  as (X_GRID, Z_GRID)
+			   and checks cells in bounding box area
+			   [[X_GRID-OBSTACLE_CLEARANCE, X_GRID+OBSTACLE_CLEARANCE],
+			   [Z_GRID-OBSTACLE_CLEARANCE, Z_GRID+OBSTACLE_CLEARANCE]]
+			   This function also contains the griddatabase call that gets traversal costs.
+			   */
 			bool canBeTraversed ( int id );
 			/*
-				@function getPointFromGridIndex accepts the grid index as input and returns an Util::Point corresponding to the center of that cell.
-			*/
+			   @function getPointFromGridIndex accepts the grid index as input and returns an Util::Point corresponding to the center of that cell.
+			   */
 			Util::Point getPointFromGridIndex(int id);
 
 			/*
-				@function computePath
-				DO NOT CHANGE THE DEFINITION OF THIS FUNCTION
-				This function executes an A* query
-				@parameters
-				agent_path : The solution path that is populated by the A* search
-				start : The start point
-				goal : The goal point
-				_gSpatialDatabase : The pointer to the GridDatabase2D from the agent
-				append_to_path : An optional argument to append to agent_path instead of overwriting it.
-			*/
+			   @function computePath
+			   DO NOT CHANGE THE DEFINITION OF THIS FUNCTION
+			   This function executes an A* query
+			   @parameters
+agent_path : The solution path that is populated by the A* search
+start : The start point
+goal : The goal point
+_gSpatialDatabase : The pointer to the GridDatabase2D from the agent
+append_to_path : An optional argument to append to agent_path instead of overwriting it.
+*/
 
 			bool computePath(std::vector<Util::Point>& agent_path, Util::Point start, Util::Point goal, SteerLib::GridDatabase2D * _gSpatialDatabase, bool append_to_path = false);
+			double heuristicEuclidean(int x_1, int z_1, int x_2, int z_2);
+			double heuristicManhattan(int x_1, int z_1, int x_2, int z_2);
+			bool constructPath(std::vector<Util::Point>& agent_path, AStarPlannerNode* endNode);
+			std::vector<AStarPlannerNode*> getNeighborNodes(AStarPlannerNode* current_node);
+			void outputStatue() ;
 		private:
+			std::vector< std::vector<AStarPlannerNode> > maze;
 			SteerLib::GridDatabase2D * gSpatialDatabase;
+			std::vector<AStarPlannerNode*> openSet;
+			std::unordered_set<AStarPlannerNode*> closeSet;
+
 	};
 
 

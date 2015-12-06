@@ -24,6 +24,33 @@
 extern SteerLib::EngineInterface * gEngine;
 // extern SteerLib::GridDatabase2D * gSpatialDatabase;
 
+namespace SearchAIGlobals {
+
+	struct PhaseProfilers {
+		Util::PerformanceProfiler aiProfiler;
+		Util::PerformanceProfiler drawProfiler;
+		Util::PerformanceProfiler longTermPhaseProfiler;
+		Util::PerformanceProfiler midTermPhaseProfiler;
+		Util::PerformanceProfiler shortTermPhaseProfiler;
+		Util::PerformanceProfiler perceptivePhaseProfiler;
+		Util::PerformanceProfiler predictivePhaseProfiler;
+		Util::PerformanceProfiler reactivePhaseProfiler;
+		Util::PerformanceProfiler steeringPhaseProfiler;
+	};
+
+
+	extern unsigned int gLongTermPlanningPhaseInterval;
+	extern unsigned int gMidTermPlanningPhaseInterval;
+	extern unsigned int gShortTermPlanningPhaseInterval;
+	extern unsigned int gPredictivePhaseInterval;
+	extern unsigned int gReactivePhaseInterval;
+	extern unsigned int gPerceptivePhaseInterval;
+	extern bool gUseDynamicPhaseScheduling;
+	extern bool gShowStats;
+	extern bool gShowAllStats;
+
+	extern PhaseProfilers * gPhaseProfilers;
+}
 
 /**
  * @brief An example plugin for the SimulationEngine that provides very basic AI agents.
@@ -77,6 +104,7 @@ class SocialForcesAIModule : public SteerLib::ModuleInterface
         Logger * _rvoLogger;
         std::string _data;
         std::vector<LogObject *> _logData;
+	bool planned_once = true;
 };
 
 

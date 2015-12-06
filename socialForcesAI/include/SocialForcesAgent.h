@@ -20,6 +20,7 @@
 // #include "SimpleAgent.h"
 // #include "SocialForcesAIModule.h"
 #include "SocialForces_Parameters.h"
+#include "planning/AStarPlanner.h"
 
 
 /**
@@ -68,6 +69,12 @@ class SocialForcesAgent : public SteerLib::AgentInterface
         void insertAgentNeighbor(const SteerLib::AgentInterface * agent, float &rangeSq) {throw Util::GenericException("clearGoals() not implemented yet for SimpleAgent");}
         // bool compareDist(SteerLib::AgentInterface * a1, SteerLib::AgentInterface * a2 );
 
+	/*
+	computePlan calls the A* function to compute the path and store in in the global __path variable.
+	*/
+	void computePlan();
+	SteerLib::AStarPlanner astar;
+
     protected:
         /// Updates position, velocity, and orientation of the agent, given the force and dt time step.
         // void _doEulerStep(const Util::Vector & steeringDecisionForce, float dt);
@@ -82,6 +89,7 @@ class SocialForcesAgent : public SteerLib::AgentInterface
 
         bool _enabled;
         Util::Point _position;
+        Util::Point __position;
         Util::Vector _velocity;
         Util::Vector _forward; // normalized version of velocity
         Util::Vector _prefVelocity; // This is the velocity the agent wants to be at
@@ -92,6 +100,9 @@ class SocialForcesAgent : public SteerLib::AgentInterface
         std::queue<SteerLib::AgentGoalInfo> _goalQueue;
 
         // Stuff specific to RVO
+	std::vector<Util::Point> __path;
+	Util::Point __next_waypoint;
+	int last_waypoint=0;
         // should be normalized
         // Util::Vector prefVelocity_; // This is the velocity the agent wants to be at
         // Util::Vector newVelocity_;
