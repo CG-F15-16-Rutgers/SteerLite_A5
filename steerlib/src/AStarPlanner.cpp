@@ -82,6 +82,7 @@ namespace SteerLib {
 				maze[i][j].cell.y = 0;
 				maze[i][j].index = gSpatialDatabase->getCellIndexFromGridCoords(i, j);
 				gSpatialDatabase->getLocationFromIndex(maze[i][j].index, maze[i][j].point);
+				maze[i][j].init();
 			}
 		}
 
@@ -98,6 +99,9 @@ namespace SteerLib {
 //		startNode->f = 2*heuristicManhattan(start_x, start_z, goal_x, goal_z);
 //		std::cout << "Euclidean!" << std::endl;
 		startNode->f = heuristicEuclidean(start_x, start_z, goal_x, goal_z);
+		openSet.clear();
+		closeSet.clear();
+		agent_path.clear();
 		openSet.push_back(startNode);
 
 //		std::cout << "start is " << start_x << " " << start_z << std::endl;

@@ -82,8 +82,10 @@ void SocialForcesAgent::disable()
 void SocialForcesAgent::computePlan()
 {
 	std::cout<<"\nComputing agent plan ";
-	Util::Point global_goal = _goalQueue.back().targetLocation;
-	if(astar.computePath(__path, _position, _goalQueue.back().targetLocation, gSpatialDatabase))
+	if (global_goal.x == 0 && global_goal.y == 0 && global_goal.z == 0) {
+		global_goal  = _goalQueue.back().targetLocation;
+	}
+	if(astar.computePath(__path, _position, global_goal, gSpatialDatabase))
 	{
 
 		while(!_goalQueue.empty())
@@ -95,9 +97,9 @@ void SocialForcesAgent::computePlan()
 			goal_path_pt.targetLocation = __path[i];
 			_goalQueue.push(goal_path_pt);
 		}
-		SteerLib::AgentGoalInfo goal_path_pt;
-		goal_path_pt.targetLocation = global_goal;
-		_goalQueue.push(goal_path_pt);
+//		SteerLib::AgentGoalInfo goal_path_pt;
+//		goal_path_pt.targetLocation = global_goal;
+//		_goalQueue.push(goal_path_pt);
 	}
 	// else
 	// {
@@ -181,6 +183,8 @@ void SocialForcesAgent::reset(const SteerLib::AgentInitialConditions & initialCo
 				// std::cout << "assigning random goal" << std::endl;
 				_goalQueue.back().targetLocation = gSpatialDatabase->randomPositionWithoutCollisions(1.0f, true);
 			}
+
+			global_goal = _goalQueue.back().targetLocation;
 		}
 		else {
 			throw Util::GenericException("Unsupported goal type; SocialForcesAgent only supports GOAL_TYPE_SEEK_STATIC_TARGET and GOAL_TYPE_AXIS_ALIGNED_BOX_GOAL.");
@@ -656,11 +660,15 @@ void SocialForcesAgent::updateAI(float timeStamp, float dt, unsigned int frameNu
 	// std::cout << "_SocialForcesParams.rvo_max_speed " << _SocialForcesParams._SocialForcesParams.rvo_max_speed << std::endl;
 	//
 	//if current position is far from the first point in goalQueue, recompute path
-	if (Util::distanceBetween(_position, _goalQueue.front().targetLocation) > 5) {
+
+	double distance = Util::distanceBetween(_position, _goalQueue.front().targetLocation);
+	if ( distance > 5) {
 		computePlan();
+	} else if (distance < 1) {
+//		_goalQueue.pop();
+//		last_waypoint++;
+//		std::cout << "Pop by us!!" <<std::endl;
 	}
-
-
 	
 	Util::AutomaticFunctionProfiler profileThisFunction( &SocialForcesGlobals::gPhaseProfilers->aiProfiler );
 	if (!enabled())
@@ -669,6 +677,8 @@ void SocialForcesAgent::updateAI(float timeStamp, float dt, unsigned int frameNu
 	}
 
 	Util::AxisAlignedBox oldBounds(_position.x - _radius, _position.x + _radius, 0.0f, 0.0f, _position.z - _radius, _position.z + _radius);
+
+//	std::cout << "goalQueue's size is " << _goalQueue.size() << std::endl;
 
 	SteerLib::AgentGoalInfo goalInfo = _goalQueue.front();
 	Util::Vector goalDirection;
@@ -761,7 +771,7 @@ void SocialForcesAgent::updateAI(float timeStamp, float dt, unsigned int frameNu
 							goalInfo.targetRegion.zmin, goalInfo.targetRegion.zmax, this->position(), this->radius())))
 	{
 		_goalQueue.pop();
-		// std::cout << "Made it to a goal" << std::endl;
+//		 std::cout << "Made it to a goal" << std::endl;
 		if (_goalQueue.size() != 0)
 		{
 			// in this case, there are still more goals, so start steering to the next goal.

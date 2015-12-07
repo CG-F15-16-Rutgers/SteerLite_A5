@@ -245,6 +245,7 @@ void SocialForcesAIModule::preprocessSimulation()
 		std::cout<<"\nAgent :: "<<i<<"/"<<_agents.size()-1;
 		((SocialForcesAgent*)_agents[i])->computePlan();
 	}
+	
 }
 
 

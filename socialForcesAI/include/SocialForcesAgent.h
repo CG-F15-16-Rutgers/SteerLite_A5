@@ -137,6 +137,7 @@ class SocialForcesAgent : public SteerLib::AgentInterface
         std::vector<Util::Point> _midTermPath;
         // holds the location of the best local target along the midtermpath
         Util::Point _currentLocalTarget;
+	Util::Point global_goal;
 
         friend class SocialForcesAIModule;
 
