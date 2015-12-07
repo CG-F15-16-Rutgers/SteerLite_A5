@@ -48,6 +48,12 @@ The greater than, less than and equals operator have been overloaded. This means
 				cell.x = -1;
 				cell.z = -1;
 			}
+
+			void init () {
+				f = std::numeric_limits<double>::max() ;
+				g = std::numeric_limits<double>::max() ;
+				parent = NULL;
+			}
 			AStarPlannerNode(Util::Point _point, double _g, double _f, AStarPlannerNode* _parent)
 			{
 				f = _f;
